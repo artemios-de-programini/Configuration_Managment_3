@@ -8,6 +8,7 @@ from constants import (
     MIN_VALUE,
     OFFSET_MAX,
     ONE,
+    OPCODE_MAX,
 )
 
 OPCODE_FIELD = "A"
@@ -181,3 +182,54 @@ def make(mnemonic: str, *values: int) -> Instruction:
             f"допустимы: {', '.join(sorted(BY_MNEMONIC))}"
         )
     return Instruction(opcode, tuple(values))
+
+
+def encode(instruction: Instruction) -> bytes:
+    """Упаковывает команду в машинное слово little-endian."""
+    word = instruction.code
+    pairs = zip(instruction.opcode.operands, instruction.values)
+    for operand, value in pairs:
+        if not operand.fits(value):
+            raise AssemblyError(
+                f"{operand.name}={value} вне диапазона "
+                f"{operand.limit_text} ({operand.purpose})"
+            )
+        word |= value << operand.bit
+    return word.to_bytes(instruction.size, "little")
+
+
+def decode(chunk: bytes) -> Instruction:
+    """Декодирует команду из начала буфера машинного кода."""
+    if not chunk:
+        raise MachineError("пустой буфер машинного кода")
+    code = chunk[0] & OPCODE_MAX
+    opcode = BY_CODE.get(code)
+    if opcode is None:
+        raise MachineError(_unknown_code(code))
+    if len(chunk) < opcode.size:
+        raise MachineError(_truncated(opcode, len(chunk)))
+    word = int.from_bytes(chunk[: opcode.size], "little")
+    values = tuple(
+        (word >> operand.bit) & operand.mask
+        for operand in opcode.operands
+    )
+    return Instruction(opcode, values)
+
+
+def _unknown_code(code: int) -> str:
+    """Возвращает текст ошибки о неизвестном коде операции."""
+    allowed = ", ".join(str(opcode.code) for opcode in OPCODES)
+    return f"неизвестный код операции A={code}; допустимы: {allowed}"
+
+
+def _truncated(opcode: Opcode, remaining: int) -> str:
+    """Возвращает текст ошибки об обрыве команды."""
+    return (
+        f"команда {opcode.mnemonic} (A={opcode.code}) обрывается: "
+        f"нужно {opcode.size} байт, а осталось {remaining}"
+    )
+
+
+def format_bytes(chunk: bytes) -> str:
+    """Байтовая запись команды в виде 0xC0, 0x3B, 0xE0, 0x08."""
+    return ", ".join(f"0x{byte:02X}" for byte in chunk)

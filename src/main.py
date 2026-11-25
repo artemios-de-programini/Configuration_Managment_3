@@ -1,12 +1,13 @@
-"""CLI-ассемблер УВМ (вариант №8): разбор программы и вывод результата."""
+"""CLI-ассемблер УВМ (вариант №8): CSV -> машинный код."""
 
 import argparse
 import sys
 from pathlib import Path
 
+from assembler import encode_commands, write_binary
 from constants import FAILURE_CODE, SUCCESS_CODE
 from csv_parser import load_program
-from isa import AssemblyError
+from isa import AssemblyError, format_bytes
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -23,14 +24,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "output",
         type=Path,
-        help="файл машинного кода (создаётся на этапе 2)",
+        help="файл машинного кода (little-endian)",
     )
     parser.add_argument(
         "--test",
         action="store_true",
-        help="режим тестирования: печать представления программы",
+        help="режим тестирования: печать байтов команд",
     )
     return parser
+
+
+def _print_chunks(chunks: list[bytes]) -> None:
+    """Печатает байты команд в формате спецификации."""
+    for chunk in chunks:
+        print(format_bytes(chunk))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -38,6 +45,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         program = load_program(args.source)
+        chunks = encode_commands(program)
     except OSError as error:
         print(
             f"Ошибка: не удалось прочитать '{args.source}': {error}",
@@ -49,10 +57,22 @@ def main(argv: list[str] | None = None) -> int:
         return FAILURE_CODE
 
     if args.test:
-        for instruction in program:
-            print(instruction.fields_text())
+        _print_chunks(chunks)
 
-    print(f"Разобрано команд: {len(program)}")
+    machine_code = b"".join(chunks)
+    try:
+        write_binary(args.output, machine_code)
+    except OSError as error:
+        print(
+            f"Ошибка: не удалось записать '{args.output}': {error}",
+            file=sys.stderr,
+        )
+        return FAILURE_CODE
+
+    print(
+        f"Ассемблировано команд: {len(program)} -> "
+        f"{args.output} ({len(machine_code)} байт)"
+    )
     return SUCCESS_CODE
 
 
