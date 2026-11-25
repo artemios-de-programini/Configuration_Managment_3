@@ -24,6 +24,8 @@ Push-Location (Split-Path -Parent $PSScriptRoot)
 try {
     New-Item -ItemType Directory -Force -Path 'output' | Out-Null
     Invoke-Python @('src/main.py', 'tests/spec_test.csv', 'output/spec_test.bin', '--test')
+    Invoke-Python @('src/main.py', 'tests/copy_array.csv', 'output/copy_array.bin')
+    Invoke-Python @('src/interpreter.py', 'output/copy_array.bin', 'output/copy_array.xml', '800:807')
     Invoke-Python @('-m', 'unittest', 'discover', '-s', 'tests', '-v')
 }
 finally {
