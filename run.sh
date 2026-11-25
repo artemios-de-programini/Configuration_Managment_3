@@ -22,4 +22,6 @@ fi
 "$PYTHON_BIN" src/main.py tests/spec_test.csv output/spec_test.bin --test
 "$PYTHON_BIN" src/main.py tests/copy_array.csv output/copy_array.bin
 "$PYTHON_BIN" src/interpreter.py output/copy_array.bin output/copy_array.xml 800:807
+"$PYTHON_BIN" src/main.py tests/eq_test.csv output/eq_test.bin
+"$PYTHON_BIN" src/interpreter.py output/eq_test.bin output/eq_test.xml 30:32
 "$PYTHON_BIN" -m unittest discover -s tests -v

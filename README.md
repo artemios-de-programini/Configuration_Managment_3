@@ -26,11 +26,13 @@ CLI-ассемблер и интерпретатор учебной виртуа
 ├── tests/
 │   ├── spec_test.csv             # тестовая программа по спецификации
 │   ├── copy_array.csv            # тест этапа 3: копирование массива
+│   ├── eq_test.csv               # тест этапа 4: операция "=="
 │   ├── invalid_range.csv         # пример программы с ошибкой в поле
 │   ├── run.ps1                   # запуск проверки (PowerShell)
 │   ├── test_stage1.ps1           # сценарий этапа 1
 │   ├── test_stage2.ps1           # сценарий этапа 2
 │   ├── test_stage3.ps1           # сценарий этапа 3
+│   ├── test_stage4.ps1           # сценарий этапа 4
 │   └── test_repository_audit.py  # аудит оформления репозитория
 ├── .gitignore
 ├── README.md
@@ -217,6 +219,33 @@ python src/interpreter.py output/copy_array.bin output/copy_array_dst.xml 800:80
 </memory_dump>
 ```
 
+### Операция `==`
+
+Программа `tests/eq_test.csv` сравнивает значения по адресам 500, 501 и
+502 с эталонами 42 и 99. Базовый указатель первого операнда хранится в
+ячейке 40 и равен 500, смещение `B` меняется от 0 до 2, поэтому
+проверяются оба исхода операции.
+
+```powershell
+python src/main.py tests/eq_test.csv output/eq_test.bin
+python src/interpreter.py output/eq_test.bin output/eq_test.xml 30:32
+```
+
+```text
+Ассемблировано команд: 9 -> output\eq_test.bin (45 байт)
+Выполнено команд: 9
+Дамп памяти [30:32] сохранён в output\eq_test.xml
+```
+
+```xml
+<?xml version='1.0' encoding='utf-8'?>
+<memory_dump start="30" end="32" instructions="9">
+  <cell address="30">1</cell>
+  <cell address="31">0</cell>
+  <cell address="32">1</cell>
+</memory_dump>
+```
+
 **Скрипты запуска:**
 
 ```powershell
@@ -258,7 +287,13 @@ python src/interpreter.py output/copy_array.bin output/copy_array_dst.xml 800:80
     с отступами `ET.indent`;
   - программа `tests/copy_array.csv` копирует массив из восьми чисел с
     адресов 700–707 на 800–807, XML-дампы совпадают.
-- [ ] **Этап 4. Реализация АЛУ** — выполнение операции `==`.
+- [x] **Этап 4. Реализация АЛУ**
+  - добавлено выполнение операции `==` (код `A=3`, 7 байт): первый
+    операнд читается по адресу `data_mem[E] + B`, второй — по адресу
+    `C`, результат `1` или `0` записывается по адресу `D`;
+  - программа `tests/eq_test.csv` проверяет оба исхода операции при
+    ненулевом базовом указателе и смещениях 0, 1 и 2, XML-дамп содержит
+    значения `1, 0, 1`.
 - [ ] **Этап 5. Выполнение тестовой задачи** — векторы длины 6, три
   примера, автотесты и финальная документация.
 

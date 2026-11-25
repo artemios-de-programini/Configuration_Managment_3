@@ -8,6 +8,7 @@ from constants import (
     ZERO,
 )
 from isa import (
+    EQ,
     LOAD,
     READ,
     WRITE,
@@ -98,8 +99,21 @@ def _execute_write(machine: Machine, instruction: Instruction) -> None:
     )
 
 
+def _execute_eq(machine: Machine, instruction: Instruction) -> None:
+    """Выполняет бинарную операцию == над двумя операндами."""
+    offset, second_cell, result, base_cell = instruction.values
+    machine.check_address(result, "адрес результата")
+    base = machine.load_cell(base_cell, "адрес базового указателя")
+    first = machine.load_cell(
+        machine.add_offset(base, offset), "адрес первого операнда"
+    )
+    second = machine.load_cell(second_cell, "адрес второго операнда")
+    machine.data_memory[result] = ONE if first == second else ZERO
+
+
 HANDLERS = {
     LOAD.code: _execute_load,
     READ.code: _execute_read,
     WRITE.code: _execute_write,
+    EQ.code: _execute_eq,
 }
