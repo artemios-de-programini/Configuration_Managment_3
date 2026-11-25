@@ -28,6 +28,14 @@ try {
     Invoke-Python @('src/interpreter.py', 'output/copy_array.bin', 'output/copy_array.xml', '800:807')
     Invoke-Python @('src/main.py', 'tests/eq_test.csv', 'output/eq_test.bin')
     Invoke-Python @('src/interpreter.py', 'output/eq_test.bin', 'output/eq_test.xml', '30:32')
+    Invoke-Python @('src/main.py', 'tests/vector_equal_6.csv', 'output/vector.bin')
+    Invoke-Python @('src/interpreter.py', 'output/vector.bin', 'output/vector.xml', '100:105')
+    Invoke-Python @('src/main.py', 'tests/example_1.csv', 'output/example_1.bin')
+    Invoke-Python @('src/interpreter.py', 'output/example_1.bin', 'output/example_1.xml', '300:305')
+    Invoke-Python @('src/main.py', 'tests/example_2.csv', 'output/example_2.bin')
+    Invoke-Python @('src/interpreter.py', 'output/example_2.bin', 'output/example_2.xml', '800:805')
+    Invoke-Python @('src/main.py', 'tests/example_3.csv', 'output/example_3.bin')
+    Invoke-Python @('src/interpreter.py', 'output/example_3.bin', 'output/example_3.xml', '980:985')
     Invoke-Python @('-m', 'unittest', 'discover', '-s', 'tests', '-v')
 }
 finally {

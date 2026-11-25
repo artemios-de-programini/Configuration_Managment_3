@@ -66,7 +66,7 @@ def _parse_row(cells: list[str], line_no: int) -> Instruction:
         raise _unknown_command(cells[0], line_no)
     values = _take_values(cells, opcode, mnemonic, line_no)
     operands = _parse_operands(values, opcode, mnemonic, line_no)
-    return Instruction(opcode, operands)
+    return Instruction(opcode, tuple(operands))
 
 
 def _unknown_command(text: str, line_no: int) -> AssemblyError:
